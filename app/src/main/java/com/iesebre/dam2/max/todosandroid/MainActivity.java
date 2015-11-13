@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCE_TODOS, 0);
         String todoList = todos.getString(TODO_LIST, null);
 
-        Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
+        Type arrayTodoList = new TypeToken<TodoItem>() {}.getType();
 
 
         gson = new Gson();
