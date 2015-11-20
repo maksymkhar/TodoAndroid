@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -27,6 +28,13 @@ public class MainActivity extends AppCompatActivity
     private static final String SHARED_PREFERENCE_TODOS = "SP_TODOS";
     private static final String TODO_LIST = "todo_list";
     private Gson gson;
+
+    public TodoArrayList tasks;
+
+    private Snackbar snackbar;
+
+
+    public static final int LENGTH_LONG = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +74,55 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCE_TODOS, 0);
         String todoList = todos.getString(TODO_LIST, null);
 
-        Type arrayTodoList = new TypeToken<TodoItem>() {}.getType();
+        if (todoList == null)
+        {
+            String initialJson =    "[" +
+                                        "{\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2}," +
+                                        "{\"name\":\"Comprar pa\", \"done\": false, \"priority\": 1},"  +
+                                        "{\"name\":\"Comprar ous\", \"done\": false, \"priority\": 3}"  +
+                                    "]";
 
+            SharedPreferences.Editor editor = todos.edit();
+            editor.putString(TODO_LIST, initialJson);
+            editor.commit();
+
+            todoList = todos.getString(TODO_LIST, null);
+        }
+
+
+        Log.v("JSON",todoList);
+
+        /*
+        snackbar = Snackbar.make(findViewById(android.R.id.content), todoList, Snackbar.LENGTH_LONG).setAction("Action", null);
+        snackbar.show();
+        Toast.makeText(this, "LOOOONG..", Toast.LENGTH_LONG).show();
+        */
 
         gson = new Gson();
+
+        // Mapejem el JSON
+        Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
+        TodoArrayList temp = gson.fromJson(todoList, arrayTodoList);
+
+        if(temp != null)
+        {
+            tasks = temp;
+
+            for (int i=0; i<tasks.size(); i++)
+            {
+                Log.v("TASK", tasks.get(i).getName());
+            }
+        }
+        else
+        {
+            //Error TODO
+        }
+
+        ListView todoslv = (ListView) findViewById(R.id.todoListView);
+
+        TodoListAdapter adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
+        todoslv.setAdapter(adapter);
+
 
         /*
 
@@ -82,7 +135,7 @@ public class MainActivity extends AppCompatActivity
 
          */
 
-        gson.fromJson(TODO_LIST, arrayTodoList);
+
 
 
     }
