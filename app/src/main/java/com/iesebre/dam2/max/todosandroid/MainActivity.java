@@ -1,5 +1,7 @@
 package com.iesebre.dam2.max.todosandroid;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,8 +17,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -50,10 +55,26 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
 
-                Intent i = new Intent(MainActivity.this, Main2Activity.class);
-                startActivity(i);
 
-                //snackbar = Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null);
+                new MaterialDialog.Builder(MainActivity.this)
+                        .title("Title")
+                        .customView(R.layout.form_add_task, true)
+                        .positiveText("ADD")
+                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            @Override
+                            public void onClick(MaterialDialog dialog, DialogAction which) {
+                                Log.v("DIALOG", "Positive");
+                            }
+                        })
+                        .negativeText("CANCEL")
+                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                            @Override
+                            public void onClick(MaterialDialog dialog, DialogAction which) {
+                                Log.v("DIALOG", "Negative");
+                            }
+                        })
+                        .show();
+
             }
         });
 
@@ -66,11 +87,9 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
         /*
             SHARED PREFERENCES
          */
-
         SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCE_TODOS, 0);
         String todoList = todos.getString(TODO_LIST, null);
 
@@ -122,6 +141,15 @@ public class MainActivity extends AppCompatActivity
 
         TodoListAdapter adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
         todoslv.setAdapter(adapter);
+
+        todoslv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Log.v("Click", String.valueOf(position));
+
+            }
+        });
 
 
         /*
