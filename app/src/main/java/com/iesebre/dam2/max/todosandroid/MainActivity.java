@@ -18,7 +18,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -38,6 +40,10 @@ public class MainActivity extends AppCompatActivity
 
     private Snackbar snackbar;
 
+    private TodoListAdapter adapter;
+
+    private SharedPreferences todos;
+
 
     public static final int LENGTH_LONG = 1;
 
@@ -48,14 +54,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-
-        FloatingActionButton fabAdd = (FloatingActionButton) findViewById(R.id.fabAdd);
-        //FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
-
-
-        fabAdd.setOnClickListener(this);
-
+        // Add listeners to fab buttons.
+        findViewById(R.id.fabAdd).setOnClickListener(this);
+        findViewById(R.id.fabRemove).setOnClickListener(this);
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -66,60 +67,15 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        
+        // Load tasks from SharedPreferences
+        tasks = loadTasks();
 
-        /*
-            SHARED PREFERENCES
-         */
-        SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCE_TODOS, 0);
-        String todoList = todos.getString(TODO_LIST, null);
-
-        if (todoList == null)
-        {
-            String initialJson =    "[" +
-                                        "{\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2}," +
-                                        "{\"name\":\"Comprar pa\", \"done\": false, \"priority\": 1},"  +
-                                        "{\"name\":\"Comprar ous\", \"done\": false, \"priority\": 3}"  +
-                                    "]";
-
-            SharedPreferences.Editor editor = todos.edit();
-            editor.putString(TODO_LIST, initialJson);
-            editor.commit();
-
-            todoList = todos.getString(TODO_LIST, null);
-        }
-
-
-        Log.v("JSON",todoList);
-
-        /*
-        snackbar = Snackbar.make(findViewById(android.R.id.content), todoList, Snackbar.LENGTH_LONG).setAction("Action", null);
-        snackbar.show();
-        Toast.makeText(this, "LOOOONG..", Toast.LENGTH_LONG).show();
-        */
-
-        gson = new Gson();
-
-        // Mapejem el JSON
-        Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
-        TodoArrayList temp = gson.fromJson(todoList, arrayTodoList);
-
-        if(temp != null)
-        {
-            tasks = temp;
-
-            for (int i=0; i<tasks.size(); i++)
-            {
-                Log.v("TASK", tasks.get(i).getName());
-            }
-        }
-        else
-        {
-            //Error TODO
-        }
+        if (tasks == null) { return; }
 
         ListView todoslv = (ListView) findViewById(R.id.todoListView);
 
-        TodoListAdapter adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
+        adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
         todoslv.setAdapter(adapter);
 
         todoslv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -130,22 +86,37 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
 
+    private TodoArrayList loadTasks()
+    {
+        todos = getSharedPreferences(SHARED_PREFERENCE_TODOS, 0);
+        String todoList = todos.getString(TODO_LIST, null);
 
-        /*
+        if (todoList == null)
+        {
+            String initialJson =    "[" +
+                    "{\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2}," +
+                    "{\"name\":\"Comprar pa\", \"done\": false, \"priority\": 1},"  +
+                    "{\"name\":\"Comprar ous\", \"done\": false, \"priority\": 3}"  +
+                    "]";
 
-        [
-            {"name":"Comprar llet", "done": true, "priority": 2},
-            {"name":"Comprar pa", "done": false, "priority": 1},
-            {"name":"Comprar ous", "done": false, "priority": 3}
-        ]
+            SharedPreferences.Editor editor = todos.edit();
+            editor.putString(TODO_LIST, initialJson);
+            editor.commit();
 
+            todoList = todos.getString(TODO_LIST, null);
+        }
 
-         */
+        gson = new Gson();
 
+        // Mapejem el JSON
+        Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
+        TodoArrayList allTasks = gson.fromJson(todoList, arrayTodoList);
 
+        if(allTasks == null) { return null; }
 
-
+        return allTasks;
     }
 
     @Override
@@ -213,8 +184,32 @@ public class MainActivity extends AppCompatActivity
             case R.id.fabAdd:
                 displayAddTaskDialog();
                 break;
+            case R.id.fabRemove:
+                removeTask();
+                break;
         }
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        saveTasks();
+    }
+
+    private void saveTasks()
+    {
+        String tasksToSave = gson.toJson(tasks);
+
+        SharedPreferences.Editor editor = todos.edit();
+        editor.putString(TODO_LIST, tasksToSave);
+        editor.commit();
+    }
+
+    private void removeTask()
+    {
+        //TODO
     }
 
     private void displayAddTaskDialog()
@@ -226,16 +221,24 @@ public class MainActivity extends AppCompatActivity
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(MaterialDialog dialog, DialogAction which) {
-                        Log.v("DIALOG", "Positive");
+
+                        EditText editTextName = (EditText) dialog.findViewById(R.id.etName);
+                        editTextName.getText();
+                        addTask(editTextName.getText().toString());
                     }
                 })
                 .negativeText("CANCEL")
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(MaterialDialog dialog, DialogAction which) {
-                        Log.v("DIALOG", "Negative");
-                    }
-                })
                 .show();
+    }
+
+    private void addTask(String name)
+    {
+        TodoItem todoItem = new TodoItem();
+        todoItem.setName(name);
+        todoItem.setDone(true);
+        todoItem.setPriority(1);
+
+        tasks.add(todoItem);
+        adapter.notifyDataSetChanged();
     }
 }

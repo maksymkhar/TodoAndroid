@@ -24,7 +24,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_fab" />
+        android:src="@drawable/ic_fab"
+        app:backgroundTint="@color/green"/>
 
     <Space
         android:id="@+id/space"
@@ -40,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:src="@drawable/ic_remove_white_36dp"
-        app:backgroundTint="#000"
+        app:backgroundTint="@color/red"
         app:layout_anchor="@id/space"
         app:layout_anchorGravity="top" />
 
