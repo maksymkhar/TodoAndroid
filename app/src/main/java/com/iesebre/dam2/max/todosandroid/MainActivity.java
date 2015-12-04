@@ -28,7 +28,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
     private static final String SHARED_PREFERENCE_TODOS = "SP_TODOS";
     private static final String TODO_LIST = "todo_list";
@@ -50,33 +50,13 @@ public class MainActivity extends AppCompatActivity
 
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        FloatingActionButton fabAdd = (FloatingActionButton) findViewById(R.id.fabAdd);
+        //FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
 
 
-                new MaterialDialog.Builder(MainActivity.this)
-                        .title("Title")
-                        .customView(R.layout.form_add_task, true)
-                        .positiveText("ADD")
-                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                            @Override
-                            public void onClick(MaterialDialog dialog, DialogAction which) {
-                                Log.v("DIALOG", "Positive");
-                            }
-                        })
-                        .negativeText("CANCEL")
-                        .onNegative(new MaterialDialog.SingleButtonCallback() {
-                            @Override
-                            public void onClick(MaterialDialog dialog, DialogAction which) {
-                                Log.v("DIALOG", "Negative");
-                            }
-                        })
-                        .show();
+        fabAdd.setOnClickListener(this);
 
-            }
-        });
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -223,5 +203,39 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId())
+        {
+            case R.id.fabAdd:
+                displayAddTaskDialog();
+                break;
+        }
+
+    }
+
+    private void displayAddTaskDialog()
+    {
+        new MaterialDialog.Builder(MainActivity.this)
+                .title("Add task")
+                .customView(R.layout.form_add_task, true)
+                .positiveText("ADD")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(MaterialDialog dialog, DialogAction which) {
+                        Log.v("DIALOG", "Positive");
+                    }
+                })
+                .negativeText("CANCEL")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(MaterialDialog dialog, DialogAction which) {
+                        Log.v("DIALOG", "Negative");
+                    }
+                })
+                .show();
     }
 }
