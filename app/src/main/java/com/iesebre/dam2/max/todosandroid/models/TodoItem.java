@@ -1,4 +1,4 @@
-package com.iesebre.dam2.max.todosandroid;
+package com.iesebre.dam2.max.todosandroid.models;
 
 import com.google.gson.Gson;
 

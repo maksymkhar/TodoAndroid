@@ -1,10 +1,13 @@
-package com.iesebre.dam2.max.todosandroid;
+package com.iesebre.dam2.max.todosandroid.adapters;
 
 import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import com.iesebre.dam2.max.todosandroid.R;
+import com.iesebre.dam2.max.todosandroid.models.TodoItem;
 
 import java.util.ArrayList;
 
