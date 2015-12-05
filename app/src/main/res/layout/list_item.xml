@@ -4,6 +4,13 @@
     android:layout_height="match_parent"
     android:padding="8dp">
 
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/cbCompletedTask"
+        android:checked="false"
+        android:layout_margin="5dp" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

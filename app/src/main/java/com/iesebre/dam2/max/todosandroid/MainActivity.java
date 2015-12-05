@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity
         tasks = loadTasks();
         if (tasks == null) { return; }
 
+        Log.v("","sdsda");
+
         // Initialize ListView
         ListView todoListView = (ListView) findViewById(R.id.todoListView);
 
