@@ -27,8 +27,10 @@ import com.iesebre.dam2.max.todosandroid.utils.Constants;
 
 import java.lang.reflect.Type;
 
+import static android.view.View.*;
+
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnClickListener {
 
     private Gson gson;
     public TodoArrayList tasks;
@@ -58,9 +60,7 @@ public class MainActivity extends AppCompatActivity
 
         // Load tasks from SharedPreferences
         tasks = loadTasks();
-        if (tasks == null) { return; }
-
-        Log.v("","sdsda");
+        //if (tasks == null) { return; }
 
         // Initialize ListView
         ListView todoListView = (ListView) findViewById(R.id.todoListView);
@@ -73,8 +73,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                // TODO
-                Log.v("Click", String.valueOf(position));
+                Log.v("s","a");
             }
         });
     }
@@ -195,6 +194,7 @@ public class MainActivity extends AppCompatActivity
 
     private void removeTask()
     {
+        Log.v("CLICK", "REMOVE");
         //TODO
     }
 

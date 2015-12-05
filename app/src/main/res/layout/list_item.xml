@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="8dp">
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.hanks.library.AnimateCheckBox
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/cbCompletedTask"
-        android:checked="false"
-        android:layout_margin="5dp" />
+        android:padding="5dp"
+        app:animDuration="200"
+        app:checkedColor="#00f"
+        app:lineColor="#fff"
+        app:lineWidth="1.2dp"
+        app:unCheckColor="#ff0"/>
+
 
     <TextView
         android:layout_width="wrap_content"
@@ -17,14 +24,6 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Large Text"
         android:id="@+id/id1"
-        android:layout_margin="5dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="id2"
-        android:id="@+id/id2"
         android:layout_margin="5dp" />
 
 </LinearLayout>
