@@ -3,19 +3,19 @@ package com.iesebre.dam2.max.todosandroid;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioGroup;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -27,7 +27,7 @@ import com.iesebre.dam2.max.todosandroid.utils.Constants;
 
 import java.lang.reflect.Type;
 
-import static android.view.View.*;
+import static android.view.View.OnClickListener;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnClickListener {
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity
         findViewById(R.id.fabAdd).setOnClickListener(this);
         findViewById(R.id.fabRemove).setOnClickListener(this);
 
-
+        // Left drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity
 
         // Load tasks from SharedPreferences
         tasks = loadTasks();
-        //if (tasks == null) { return; }
+        if (tasks == null) { return; }
 
         // Initialize ListView
         ListView todoListView = (ListView) findViewById(R.id.todoListView);
@@ -69,13 +69,8 @@ public class MainActivity extends AppCompatActivity
         adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
         todoListView.setAdapter(adapter);
 
-        todoListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                Log.v("s","a");
-            }
-        });
+        // Hide/Show the remove FloatingActionButton
+        hideRemoveFabButton();
     }
 
     @Override
@@ -144,7 +139,7 @@ public class MainActivity extends AppCompatActivity
                 displayAddTaskDialog();
                 break;
             case R.id.fabRemove:
-                removeTask();
+                removeTasks();
                 break;
         }
     }
@@ -156,6 +151,10 @@ public class MainActivity extends AppCompatActivity
         saveTasks();
     }
 
+    /**
+     * Loads all tasks from SharedPreferences
+     * @return Tasks ArrayList.
+     */
     private TodoArrayList loadTasks()
     {
         todoSharedPreference = getSharedPreferences(Constants.SHARED_PREFERENCE_TODOS, 0);
@@ -172,7 +171,7 @@ public class MainActivity extends AppCompatActivity
 
         gson = new Gson();
 
-        // Mapejem el JSON
+        // Maping the JSON
         Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
         TodoArrayList allTasks = gson.fromJson(todoList, arrayTodoList);
 
@@ -181,6 +180,9 @@ public class MainActivity extends AppCompatActivity
         return allTasks;
     }
 
+    /**
+     * Save all tasks in SharedPreferences.
+     */
     private void saveTasks()
     {
         if (tasks == null) { return; }
@@ -192,12 +194,25 @@ public class MainActivity extends AppCompatActivity
         editor.apply();
     }
 
-    private void removeTask()
+    /**
+     * Remove all done tasks.
+     */
+    private void removeTasks()
     {
-        Log.v("CLICK", "REMOVE");
-        //TODO
+        for (int i = tasks.size() -1; i >= 0; i--)
+        {
+            if (tasks.get(i).isDone()) { tasks.remove(i); }
+        }
+
+        adapter.notifyDataSetChanged();
+
+        FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
+        fabRemove.hide();
     }
 
+    /**
+     * Displays new task dialog.
+     */
     private void displayAddTaskDialog()
     {
         new MaterialDialog.Builder(MainActivity.this)
@@ -208,26 +223,63 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
+                        // Task name
                         EditText editTextName = (EditText) dialog.findViewById(R.id.etName);
                         String taskName = editTextName.getText().toString();
 
-                        addTask(taskName);
+                        // Task priority
+                        RadioGroup rgPriority = (RadioGroup) dialog.findViewById(R.id.rgPriority);
+
+                        switch (rgPriority.getCheckedRadioButtonId()) {
+                            case R.id.rbLowPriority:
+                                addTask(taskName,1);
+                                break;
+                            case R.id.rbMediumPriority:
+                                addTask(taskName, 2);
+                                break;
+                            case R.id.rbHighPriority:
+                                addTask(taskName, 3);
+                                break;
+                        }
                     }
                 })
                 .negativeText(getResources().getString(R.string.cancel).toUpperCase())
                 .show();
     }
 
-    private void addTask(String name)
+    /**
+     * Adds task to tasks ArrayList.
+     * @param name The name of task.
+     * @param priority The priority of task.
+     */
+    private void addTask(String name, int priority)
     {
-        // TODO
-
         TodoItem todoItem = new TodoItem();
         todoItem.setName(name);
-        todoItem.setDone(true);
-        todoItem.setPriority(1);
+        todoItem.setDone(false);
+        todoItem.setPriority(priority);
 
         tasks.add(todoItem);
         adapter.notifyDataSetChanged();
+    }
+
+
+    /**
+     * Hides/Shows the FloatingActionButton depending of done tasks.
+     */
+    private void hideRemoveFabButton()
+    {
+        FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
+
+        for (int i=0; i<tasks.size(); i++)
+        {
+            if (tasks.get(i).isDone())
+            {
+                fabRemove.show();
+                return;
+            }
+
+            if (i== tasks.size() - 1) fabRemove.hide();
+        }
     }
 }

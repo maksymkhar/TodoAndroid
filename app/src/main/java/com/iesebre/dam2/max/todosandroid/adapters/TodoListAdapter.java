@@ -1,18 +1,12 @@
 package com.iesebre.dam2.max.todosandroid.adapters;
 
 import android.app.Activity;
-import android.content.DialogInterface;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.hanks.library.AnimateCheckBox;
@@ -55,12 +49,8 @@ public class TodoListAdapter extends BaseAdapter {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
 
-
-
         // TODO, this is not the best solution...
         convertView = null;
-
-
 
         final TodoItem item = list.get(position);
 
@@ -70,7 +60,7 @@ public class TodoListAdapter extends BaseAdapter {
 
             if (item != null)
             {
-                final TextView tv1 = (TextView) convertView.findViewById(R.id.id1);
+                final TextView tv1 = (TextView) convertView.findViewById(R.id.tvTaskName);
                 tv1.setText(item.getName());
 
                 final AnimateCheckBox cbCompletedTask = (AnimateCheckBox) convertView.findViewById(R.id.cbCompletedTask);
@@ -82,6 +72,7 @@ public class TodoListAdapter extends BaseAdapter {
                 cbCompletedTask.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+
                         if (!cbCompletedTask.isChecked())
                         {
                             cbCompletedTask.setChecked(true);
@@ -95,10 +86,9 @@ public class TodoListAdapter extends BaseAdapter {
                             list.get(position).setDone(false);
                         }
 
-
+                        checkDoneTasks();
                     }
                 });
-
             }
         }
 
@@ -112,20 +102,14 @@ public class TodoListAdapter extends BaseAdapter {
             }
         });
 
-        // Item checkBox click event listener
-        /*cbCompletedTask.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                // TODO
-
-            }
-        });*/
-
         return convertView;
-
     }
 
+    /**
+     * Set the priority color to CheckBox.
+     * @param checkBox Is the CheckBox to change color.
+     * @param priority [1, 2 or 3] Colors [Green, orange, red]
+     */
     private void setPriorityColor(AnimateCheckBox checkBox, int priority)
     {
         switch (priority)
@@ -149,15 +133,32 @@ public class TodoListAdapter extends BaseAdapter {
         }
     }
 
+    /**
+     * Strike the TextView if the task is done.
+     * @param name TextVIew to Strike
+     * @param isDone True if is done, False if is not.
+     */
     private void strikethroughName (TextView name, boolean isDone)
     {
-        if (isDone)
+        if (isDone) {  name.setPaintFlags(name.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG); }
+        else { name.setPaintFlags(name.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)); }
+    }
+
+    /**
+     * Called every time one done CheckBox is touched, hides/shows the remove FloatingActionButton.
+     */
+    private void checkDoneTasks()
+    {
+        FloatingActionButton fabRemove = (FloatingActionButton) activity.findViewById(R.id.fabRemove);
+
+        for (int i=0; i<list.size(); i++)
         {
-            name.setPaintFlags(name.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-        }
-        else
-        {
-            name.setPaintFlags(name.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            if (list.get(i).isDone())
+            {
+                fabRemove.show();
+                return;
+            }
+            if (i == list.size() - 1) { fabRemove.hide(); }
         }
     }
 }

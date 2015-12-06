@@ -19,5 +19,4 @@ public class Constants {
             "{\"name\":\"Comprar pa\", \"done\": false, \"priority\": 1},"  +
             "{\"name\":\"Comprar ous\", \"done\": false, \"priority\": 3}"  +
             "]";
-
 }
