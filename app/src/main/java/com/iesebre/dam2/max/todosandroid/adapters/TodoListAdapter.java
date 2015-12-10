@@ -10,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.hanks.library.AnimateCheckBox;
+import com.iesebre.dam2.max.todosandroid.MainActivity;
 import com.iesebre.dam2.max.todosandroid.R;
 import com.iesebre.dam2.max.todosandroid.models.TodoItem;
 
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 
 /**
  * Created by max on 20/11/15.
+ *
  */
 public class TodoListAdapter extends BaseAdapter {
 
@@ -24,7 +26,7 @@ public class TodoListAdapter extends BaseAdapter {
     private int resource;
     private ArrayList<TodoItem> list;
 
-    public TodoListAdapter(Activity activity, int resource, ArrayList listData)
+    public TodoListAdapter(Activity activity, int resource, ArrayList<TodoItem> listData)
     {
         this.activity = activity;
         this.resource = resource;
@@ -97,8 +99,10 @@ public class TodoListAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
 
-                // TODO
-
+                // Initialize MainActivity
+                MainActivity mainActivity = (MainActivity) activity;
+                // Call edit task.
+                mainActivity.displayTaskDialog(activity.getString(R.string.edit_task_dialog_title), position);
             }
         });
 
@@ -145,7 +149,7 @@ public class TodoListAdapter extends BaseAdapter {
     }
 
     /**
-     * Called every time one done CheckBox is touched, hides/shows the remove FloatingActionButton.
+     * Called every time a isDone checkbox is pulsed, hides/shows the remove FloatingActionButton.
      */
     private void checkDoneTasks()
     {

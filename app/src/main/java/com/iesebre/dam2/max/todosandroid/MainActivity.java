@@ -10,6 +10,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,11 +21,13 @@ import android.widget.RadioGroup;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.internal.MDButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.iesebre.dam2.max.todosandroid.adapters.TodoListAdapter;
 import com.iesebre.dam2.max.todosandroid.models.TodoItem;
 import com.iesebre.dam2.max.todosandroid.utils.Constants;
+import com.iesebre.dam2.max.todosandroid.utils.Utils;
 
 import java.lang.reflect.Type;
 
@@ -64,7 +68,6 @@ public class MainActivity extends AppCompatActivity
 
         // Initialize ListView
         ListView todoListView = (ListView) findViewById(R.id.todoListView);
-
         // Initialitze ListView adapter
         adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
         todoListView.setAdapter(adapter);
@@ -136,7 +139,7 @@ public class MainActivity extends AppCompatActivity
         switch (v.getId())
         {
             case R.id.fabAdd:
-                displayAddTaskDialog();
+                displayTaskDialog(getString(R.string.add_task_dialog_title), -1);
                 break;
             case R.id.fabRemove:
                 removeTasks();
@@ -208,43 +211,106 @@ public class MainActivity extends AppCompatActivity
 
         FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
         fabRemove.hide();
+
+        Utils.displayToast(this, getResources().getString(R.string.removed_message));
     }
 
     /**
-     * Displays new task dialog.
+     * Displays task dialog.
+     * @param title Dialog title
+     * @param taskId If id is < 0 display New task, if id is > 0 display Edit Task
      */
-    private void displayAddTaskDialog()
+    public void displayTaskDialog(final String title, final int taskId)
     {
-        new MaterialDialog.Builder(MainActivity.this)
-                .title(getResources().getString(R.string.add_task_dialog_title))
+        // Initialize dialog.
+        MaterialDialog dialog = new MaterialDialog.Builder(this)
+                .title(title)
                 .customView(R.layout.form_add_task, true)
-                .positiveText(getResources().getString(R.string.add).toUpperCase())
+                .positiveText(getResources().getString(R.string.save).toUpperCase())
+                .negativeText(getResources().getString(R.string.cancel).toUpperCase())
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
-                        // Task name
-                        EditText editTextName = (EditText) dialog.findViewById(R.id.etName);
-                        String taskName = editTextName.getText().toString();
+                        // Task name EditText
+                        EditText etName = (EditText) dialog.findViewById(R.id.etName);
+                        String taskName = etName.getText().toString();
 
                         // Task priority
                         RadioGroup rgPriority = (RadioGroup) dialog.findViewById(R.id.rgPriority);
 
+                        int priority = 1;
                         switch (rgPriority.getCheckedRadioButtonId()) {
                             case R.id.rbLowPriority:
-                                addTask(taskName,1);
+                                priority = 1;
                                 break;
                             case R.id.rbMediumPriority:
-                                addTask(taskName, 2);
+                                priority = 2;
                                 break;
                             case R.id.rbHighPriority:
-                                addTask(taskName, 3);
+                                priority = 3;
                                 break;
                         }
+
+                        if (taskId < 0) { addTask(taskName, priority); }
+                        else { editTask(taskName, priority, taskId); }
                     }
                 })
-                .negativeText(getResources().getString(R.string.cancel).toUpperCase())
                 .show();
+
+        // If task Id is invalid, temporarily disable Save button.
+        final MDButton positiveButton = dialog.getActionButton(DialogAction.POSITIVE);
+        if (taskId < 0) positiveButton.setEnabled(false);
+
+        // Enable/Disable Save task Button
+        EditText etName = (EditText) dialog.findViewById(R.id.etName);
+        etName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() == 0) {
+                    positiveButton.setEnabled(false);
+                } else positiveButton.setEnabled(true);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        // If taskId is valid, inflate values from selected Task.
+        if (taskId >= 0) inflateDialogValues(dialog, taskId);
+    }
+
+    /**
+     * Inflate the values of Edit Task Dialog
+     * @param dialog Displayed dialog instance.
+     * @param taskId Id of task to edit.
+     */
+    private void inflateDialogValues(MaterialDialog dialog, int taskId)
+    {
+        EditText etName = (EditText) dialog.findViewById(R.id.etName);
+        etName.setText(tasks.get(taskId).getName());
+
+        RadioGroup rgPriority = (RadioGroup) dialog.findViewById(R.id.rgPriority);
+        switch (tasks.get(taskId).getPriority())
+        {
+            case 1:
+                rgPriority.check(R.id.rbLowPriority);
+                break;
+            case 2:
+                rgPriority.check(R.id.rbMediumPriority);
+                break;
+            case 3:
+                rgPriority.check(R.id.rbHighPriority);
+                break;
+            default:
+                rgPriority.check(R.id.rbLowPriority);
+                break;
+        }
     }
 
     /**
@@ -261,8 +327,24 @@ public class MainActivity extends AppCompatActivity
 
         tasks.add(todoItem);
         adapter.notifyDataSetChanged();
+
+        Utils.displayToast(this, getResources().getString(R.string.saved_message));
     }
 
+    /**
+     * Edit task from tasks ArrayList.
+     * @param name New task name.
+     * @param priority New task priority.
+     * @param taskId Id of task to edit.
+     */
+    private void editTask(String name, int priority, int taskId)
+    {
+        tasks.get(taskId).setName(name);
+        tasks.get(taskId).setPriority(priority);
+        adapter.notifyDataSetChanged();
+
+        Utils.displayToast(this, getResources().getString(R.string.edited_message));
+    }
 
     /**
      * Hides/Shows the FloatingActionButton depending of done tasks.
