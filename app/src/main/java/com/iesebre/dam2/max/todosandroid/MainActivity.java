@@ -7,11 +7,13 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +25,14 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.internal.MDButton;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.iesebre.dam2.max.todosandroid.adapters.TodoListAdapter;
 import com.iesebre.dam2.max.todosandroid.models.TodoItem;
 import com.iesebre.dam2.max.todosandroid.utils.Constants;
 import com.iesebre.dam2.max.todosandroid.utils.Utils;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 
 import java.lang.reflect.Type;
 
@@ -40,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     public TodoArrayList tasks;
     private TodoListAdapter adapter;
     private SharedPreferences todoSharedPreference;
+
+    private SwipeRefreshLayout swipeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,17 +70,22 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         // Load tasks from SharedPreferences
-        tasks = loadTasks();
-        if (tasks == null) { return; }
+        //tasks = loadTasks();
+        //if (tasks == null) { return; }
+        gson = new Gson();
 
-        // Initialize ListView
-        ListView todoListView = (ListView) findViewById(R.id.todoListView);
-        // Initialitze ListView adapter
-        adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
-        todoListView.setAdapter(adapter);
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
-        // Hide/Show the remove FloatingActionButton
-        hideRemoveFabButton();
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                loadTasksFromNetwork();
+            }
+        });
+
+
+
+        loadTasksFromNetwork();
     }
 
     @Override
@@ -158,7 +170,7 @@ public class MainActivity extends AppCompatActivity
      * Loads all tasks from SharedPreferences
      * @return Tasks ArrayList.
      */
-    private TodoArrayList loadTasks()
+    private TodoArrayList loadTasksFromPreferences()
     {
         todoSharedPreference = getSharedPreferences(Constants.SHARED_PREFERENCE_TODOS, 0);
         String todoList = todoSharedPreference.getString(Constants.SHARED_PREFERENCE_TODO_LIST, null);
@@ -172,9 +184,7 @@ public class MainActivity extends AppCompatActivity
             todoList = todoSharedPreference.getString(Constants.SHARED_PREFERENCE_TODO_LIST, null);
         }
 
-        gson = new Gson();
-
-        // Maping the JSON
+        // Mapping the JSON
         Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
         TodoArrayList allTasks = gson.fromJson(todoList, arrayTodoList);
 
@@ -188,6 +198,9 @@ public class MainActivity extends AppCompatActivity
      */
     private void saveTasks()
     {
+        // TODO
+        if (true) return;
+
         if (tasks == null) { return; }
 
         String tasksToSave = gson.toJson(tasks);
@@ -351,6 +364,8 @@ public class MainActivity extends AppCompatActivity
      */
     private void hideRemoveFabButton()
     {
+        if (tasks == null) return;
+
         FloatingActionButton fabRemove = (FloatingActionButton) findViewById(R.id.fabRemove);
 
         for (int i=0; i<tasks.size(); i++)
@@ -363,5 +378,51 @@ public class MainActivity extends AppCompatActivity
 
             if (i== tasks.size() - 1) fabRemove.hide();
         }
+    }
+
+    private void loadTasksFromNetwork ()
+    {
+        Ion.with(this)
+                .load("http://acacha.github.io/json-server-todos/db_todos.json")
+                .asJsonArray()
+                .setCallback(new FutureCallback<JsonArray>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonArray result) {
+
+                        if (e != null)
+                        {
+                            // TODO
+                            Log.e("REQUEST ERROR", e.toString());
+                            tasks = loadTasksFromPreferences();
+                        }
+                        else
+                        {
+                            Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
+                            tasks = gson.fromJson(result.toString(), arrayTodoList);
+                        }
+
+                        if(tasks == null) { return; }
+
+                        swipeContainer.setRefreshing(false);
+
+                        loadTasksView();
+
+                        Log.v("RESPONSE", tasks.toString());
+
+                    }
+                });
+
+    }
+
+    private void loadTasksView()
+    {
+        // Initialize ListView
+        ListView todoListView = (ListView) findViewById(R.id.todoListView);
+        // Initialitze ListView adapter
+        adapter = new TodoListAdapter(this, R.layout.list_item, tasks);
+        todoListView.setAdapter(adapter);
+        // Hide/Show the remove FloatingActionButton
+        hideRemoveFabButton();
+
     }
 }
