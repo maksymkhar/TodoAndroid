@@ -79,13 +79,11 @@ public class MainActivity extends AppCompatActivity
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                loadTasksFromNetwork();
+                loadTasks();
             }
         });
 
-
-
-        loadTasksFromNetwork();
+        loadTasks();
     }
 
     @Override
@@ -170,7 +168,7 @@ public class MainActivity extends AppCompatActivity
      * Loads all tasks from SharedPreferences
      * @return Tasks ArrayList.
      */
-    private TodoArrayList loadTasksFromPreferences()
+    private void loadTasksFromPreferences()
     {
         todoSharedPreference = getSharedPreferences(Constants.SHARED_PREFERENCE_TODOS, 0);
         String todoList = todoSharedPreference.getString(Constants.SHARED_PREFERENCE_TODO_LIST, null);
@@ -188,9 +186,12 @@ public class MainActivity extends AppCompatActivity
         Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
         TodoArrayList allTasks = gson.fromJson(todoList, arrayTodoList);
 
-        if(allTasks == null) { return null; }
+        swipeContainer.setRefreshing(false);
 
-        return allTasks;
+        if(allTasks == null) { return; }
+
+        tasks = allTasks;
+        setTasksView();
     }
 
     /**
@@ -380,10 +381,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Load tasks from network.
+     */
     private void loadTasksFromNetwork ()
     {
         Ion.with(this)
-                .load("http://acacha.github.io/json-server-todos/db_todos.json")
+                .load(Constants.URL_ALL_TASKS)
                 .asJsonArray()
                 .setCallback(new FutureCallback<JsonArray>() {
                     @Override
@@ -393,7 +397,8 @@ public class MainActivity extends AppCompatActivity
                         {
                             // TODO
                             Log.e("REQUEST ERROR", e.toString());
-                            tasks = loadTasksFromPreferences();
+                            loadTasksFromPreferences();
+                            return;
                         }
                         else
                         {
@@ -401,20 +406,22 @@ public class MainActivity extends AppCompatActivity
                             tasks = gson.fromJson(result.toString(), arrayTodoList);
                         }
 
-                        if(tasks == null) { return; }
-
                         swipeContainer.setRefreshing(false);
 
-                        loadTasksView();
+                        if(tasks == null) { return; }
+
+                        setTasksView();
 
                         Log.v("RESPONSE", tasks.toString());
-
                     }
                 });
 
     }
 
-    private void loadTasksView()
+    /**
+     * Set tasks array to ListView
+     */
+    private void setTasksView()
     {
         // Initialize ListView
         ListView todoListView = (ListView) findViewById(R.id.todoListView);
@@ -424,5 +431,25 @@ public class MainActivity extends AppCompatActivity
         // Hide/Show the remove FloatingActionButton
         hideRemoveFabButton();
 
+    }
+
+    /**
+     * Load tasks from network or sharedPreferences
+     */
+    private void loadTasks()
+    {
+        // Check Internet connection and load tasks
+        if (Utils.isOnline(this))
+        {
+            loadTasksFromNetwork();
+        }
+        else
+        {
+            Utils.displaySimpleDialog(this,
+                    getString(R.string.no_internet_connection_title),
+                    getString(R.string.no_internet_connection_message));
+
+            loadTasksFromPreferences();
+        }
     }
 }

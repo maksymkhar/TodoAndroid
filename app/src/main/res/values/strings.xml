@@ -18,5 +18,10 @@
     <string name="edited_message">The task is successfully edited</string>
     <string name="removed_message">Tasks successfully removed</string>
 
+    <string name="no_internet_connection_title">Connection error</string>
+    <string name="no_internet_connection_message">Seems you have problems with your Internet connection :(</string>
+
+    <string name="ok">Ok</string>
+
 
 </resources>
