@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity
         // Load tasks from SharedPreferences
         //tasks = loadTasks();
         //if (tasks == null) { return; }
+        todoSharedPreference = getSharedPreferences(Constants.SHARED_PREFERENCE_TODOS, 0);
         gson = new Gson();
 
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
@@ -170,7 +171,6 @@ public class MainActivity extends AppCompatActivity
      */
     private void loadTasksFromPreferences()
     {
-        todoSharedPreference = getSharedPreferences(Constants.SHARED_PREFERENCE_TODOS, 0);
         String todoList = todoSharedPreference.getString(Constants.SHARED_PREFERENCE_TODO_LIST, null);
 
         if (todoList == null)
@@ -199,9 +199,6 @@ public class MainActivity extends AppCompatActivity
      */
     private void saveTasks()
     {
-        // TODO
-        if (true) return;
-
         if (tasks == null) { return; }
 
         String tasksToSave = gson.toJson(tasks);
@@ -408,6 +405,8 @@ public class MainActivity extends AppCompatActivity
 
                         swipeContainer.setRefreshing(false);
 
+                        saveTasks();
+
                         if(tasks == null) { return; }
 
                         setTasksView();
@@ -441,6 +440,13 @@ public class MainActivity extends AppCompatActivity
         // Check Internet connection and load tasks
         if (Utils.isOnline(this))
         {
+            if (!Utils.isUsingWifi(this))
+            {
+                Utils.displaySimpleDialog(this,
+                        getString(R.string.not_using_wifi_title),
+                        getString(R.string.not_using_wifi_message));
+            }
+
             loadTasksFromNetwork();
         }
         else

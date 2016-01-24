@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -33,6 +35,18 @@ public class Utils {
         } else {
             return false;
         }
+    }
+
+    public static boolean isUsingWifi (Context context)
+    {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null)
+        {
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) { return true; }
+        }
+
+        return false;
     }
 
     public static void displaySimpleDialog(Context context, String title, String message)

@@ -21,6 +21,9 @@
     <string name="no_internet_connection_title">Connection error</string>
     <string name="no_internet_connection_message">Seems you have problems with your Internet connection :(</string>
 
+    <string name="not_using_wifi_title">Wifi disabled</string>
+    <string name="not_using_wifi_message">Connect Wifi to avoid added costs</string>
+
     <string name="ok">Ok</string>
 
 
